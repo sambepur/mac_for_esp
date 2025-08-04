@@ -1,54 +1,85 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include "frame_control.h"
+#include "binary.h"
+#include "parse.h"
 #include <stdlib.h>
 #include <string.h>
 
 #ifndef FRAME_H
 #define FRAME_H
 
-#define REAL_DATA_SIZE(buff, num) \
-    num -= 8; \
-    num += strlen((u_int8_t*) buff->data); \
+#define BIN_WORD_INTO_ARRAY(word, buff, ind) \
+    buff[ind] = BIN_WORD_LOW_BITS(word); \
+    buff[ind+1] = BIN_WORD_HIGH_BITS(word); \
 
-#define BROADCAST_MAC {(u_int8_t) 0xFF, (u_int8_t) 0xFF, (u_int8_t) 0xFF, (u_int8_t) 0xFF, (u_int8_t) 0xFF, (u_int8_t) 0xFF}
+#define POSITIONS   0b00000000000
+#define FC_PRESENT  0b10000000000
+#define DI_PRESENT  0b01000000000
+#define AD1_PRESENT 0b00100000000
+#define AD2_PRESENT 0b00010000000
+#define AD3_PRESENT 0b00001000000
+#define SC_PRESENT  0b00000100000
+#define AD4_PRESENT 0b00000010000
+#define QOS_PRESENT 0b00000001000
+#define HT_PRESENT  0b00000000100
+#define DAT_PRESENT 0b00000000010
+#define FCS_PRESENT 0b00000000001
 
-#define CHECK_REST(buffer, num) \
-    if (buffer->seq_control == NO_DATA) \
-        num -= 2; \
-    if (buffer->qos_control == NO_DATA) \
-        num -= 2; \
-    if (buffer->ht_control == NO_DATA) \
-        num -= 4; \
+#define SIZE_WITH_NESESSARY_FIELDS_ONLY 14
+#define SIZE_WITH_ALWAYS_PRESENT_FIELDS 40
 
-#define SIZE_WITH_NO_ALIGNMENT(num)\
-    num -= 8;
+#define NESESSARY_MAP_FIELD AD1_PRESENT | FC_PRESENT | DI_PRESENT | FCS_PRESENT
 
-#define TOTAL_ADDRESSES_SIZE(buffer, num) \
-    if (buffer->addr_2 == NULL) \
-        num -= 6; \
-    if (buffer->addr_3 == NULL) \
-        num -= 6; \
-    if (buffer->addr_4 == NULL) \
-        num -= 6; \
+#define BROADCAST_MAC {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 
-typedef struct
-{
-    u_int16_t frame_control;
+#define CHECK_REST(mpp) \
+    if (mpp->frame.seq_control != NO_DATA) \
+        mpp->map |= SC_PRESENT; \
+        mpp->size += 2; \
+    if (mpp->frame.qos_control != NO_DATA) \
+        mpp->map |= QOS_PRESENT; \
+        mpp->size += 2; \
+    if (mpp->frame.ht_control != NO_DATA) \
+        mpp->map |= HT_PRESENT; \
+        mpp->size += 4; \
+
+#define TOTAL_ADDRESSES_SIZE(mpp) \
+    if (mpp->frame.addr_2 != NULL) \
+        mpp->map |= AD2_PRESENT; \
+        mpp->size += 6; \
+    if (mpp->frame.addr_3 != NULL) \
+        mpp->map |= AD3_PRESENT; \
+        mpp->size += 6; \
+    if (mpp->frame.addr_4 != NULL) \
+        mpp->map |= AD4_PRESENT; \
+        mpp->size += 6; \
+
+
+typedef struct {
+    u_int8_t* data; // 8 bytes on 32bit
+    u_int32_t ht_control; //8
+    u_int32_t frame_check_seq;
+    u_int16_t frame_control; //8
     u_int16_t frame_id_or_duration;
-    u_int8_t addr_1[6];
+    u_int16_t qos_control;
+    u_int16_t seq_control;
+    u_int8_t addr_1[6]; //24
     u_int8_t addr_2[6];
     u_int8_t addr_3[6];
-    u_int16_t seq_control;
     u_int8_t addr_4[6];
-    u_int16_t qos_control;
-    u_int32_t ht_control;
-    u_int8_t* data;
-    u_int32_t frame_check_seq;
 
-} IEEE_80211_frame;
+} __attribute__((packed)) IEEE_80211_frame;
 
-size_t sizof_IEEE_80211_frame(IEEE_80211_frame*);
-void* to_raw_80211_buffer(IEEE_80211_frame*);
+typedef struct {
+    IEEE_80211_frame frame;
+    u_int8_t map;
+    size_t size;
+    size_t payload_size;
+} mapper;
+
+void init_mapper(mapper*, IEEE_80211_frame*);
+void mapper_init(mapper*);
+void* to_raw_80211_buffer(mapper*);
 
 #endif

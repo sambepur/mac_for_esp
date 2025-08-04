@@ -1,7 +1,7 @@
 #include "include/main.h"
 
 int main() {
-    IEEE_80211_frame test;
+    mapper mpp;
     unsigned char payload[2] = {0xA, 0xB};
     IEEE_80211_frame frame = {
         .frame_control = FC_VER | FC_TYPE_DATA | FC_SUBTYPE_DATA | FC_TO_DS,
@@ -16,6 +16,7 @@ int main() {
         .data = (void*) payload,
         .frame_check_seq = EMPTY
     };
-    size_t len = sizof_IEEE_80211_frame(&frame);
-    printf("%lu\n", len);
+    mpp.frame = frame;
+    mapper_init(&mpp);
+    printf("size: %lu\n", mpp.size);
 }

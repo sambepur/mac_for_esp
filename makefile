@@ -12,6 +12,7 @@ $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
+	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
