@@ -26,7 +26,7 @@ typedef struct {
 
 int is_digit(char);
 node separate(char*, char);
-int cut(char*, char*, int, int);
+int cut(char*, char*, int, size_t);
 size_t len(char*);
 char* cpy(char*, char*, size_t);
 meta calc(char*, char);

@@ -21,20 +21,12 @@ size_t len(char* buff) {
     }
     return t;
 }
-int cut(char* buff, char* res, int start, int offset) {
+int cut(char* buff, char* res, int start, size_t lenght) {
     if (buff == NULL || res == NULL) {
         return -1;
     }
-    size_t len = strlen(buff);
-    if (start < 0 || offset < start || start >= len) {
-        return -1;
-    }
-    if ((size_t)offset > len) {
-        offset = len;
-    }
-    int copy_len = offset - start;
-    for (int i = 0; i < copy_len; i++) {
-        res[i] = buff[start + i];
+    for (int i = 0; i < lenght; i++) {
+        res[start+i] = buff[i];
     }
     return 0;
 }

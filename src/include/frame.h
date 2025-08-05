@@ -5,15 +5,22 @@
 #include "parse.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef FRAME_H
 #define FRAME_H
 
-#define BIN_WORD_INTO_ARRAY(word, buff, ind) \
-    buff[ind] = BIN_WORD_LOW_BITS(word); \
-    buff[ind+1] = BIN_WORD_HIGH_BITS(word); \
+#define PAYLOAD_32 0xABCDEFEF
+#define PAYLOAD_16 0XABCD
 
-#define POSITIONS   0b00000000000
+#define EMPTY 0b0000000000000000
+
+#define NO_ADDR_DATA 0xB
+#define NO_DATA 0x6E6F
+
+#define LOG_PR(name, chk) \
+    printf("result for %s is %d\n", #name, name & chk); \
+
 #define FC_PRESENT  0b10000000000
 #define DI_PRESENT  0b01000000000
 #define AD1_PRESENT 0b00100000000
@@ -34,26 +41,32 @@
 #define BROADCAST_MAC {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 
 #define CHECK_REST(mpp) \
-    if (mpp->frame.seq_control != NO_DATA) \
+    if (mpp->frame.seq_control != NO_DATA) {\
         mpp->map |= SC_PRESENT; \
         mpp->size += 2; \
+    }\
     if (mpp->frame.qos_control != NO_DATA) \
-        mpp->map |= QOS_PRESENT; \
+        mpp->map |= QOS_PRESENT; {\
         mpp->size += 2; \
-    if (mpp->frame.ht_control != NO_DATA) \
+    }\
+    if (mpp->frame.ht_control != NO_DATA) {\
         mpp->map |= HT_PRESENT; \
         mpp->size += 4; \
+    }\
 
 #define TOTAL_ADDRESSES_SIZE(mpp) \
-    if (mpp->frame.addr_2 != NULL) \
+    if (mpp->frame.addr_2[0] != NO_ADDR_DATA) {\
         mpp->map |= AD2_PRESENT; \
         mpp->size += 6; \
-    if (mpp->frame.addr_3 != NULL) \
+    }\
+    if (mpp->frame.addr_3[0] != NO_ADDR_DATA) {\
         mpp->map |= AD3_PRESENT; \
         mpp->size += 6; \
-    if (mpp->frame.addr_4 != NULL) \
+    }\
+    if (mpp->frame.addr_4[0] != NO_ADDR_DATA) {\
         mpp->map |= AD4_PRESENT; \
         mpp->size += 6; \
+    }\
 
 
 typedef struct {
@@ -73,7 +86,7 @@ typedef struct {
 
 typedef struct {
     IEEE_80211_frame frame;
-    u_int8_t map;
+    u_int16_t map;
     size_t size;
     size_t payload_size;
 } mapper;
