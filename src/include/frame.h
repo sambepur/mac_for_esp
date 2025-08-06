@@ -6,15 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "feature.h"
 
 #ifndef FRAME_H
 #define FRAME_H
 
+// Feature test macro
+
+//
+
 #define PAYLOAD_32 0xABCDEFEF
 #define PAYLOAD_16 0XABCD
-
-#define EMPTY 0b0000000000000000
-
 #define NO_ADDR_DATA 0xB
 #define NO_DATA 0x6E6F
 
@@ -33,12 +35,16 @@
 #define DAT_PRESENT 0b00000000010
 #define FCS_PRESENT 0b00000000001
 
+#define FULL_MAP_NO_DATA FC_PRESENT | DI_PRESENT | AD1_PRESENT | AD2_PRESENT | AD3_PRESENT | AD4_PRESENT | SC_PRESENT | AD4_PRESENT | QOS_PRESENT | HT_PRESENT | FCS_PRESENT
+
 #define SIZE_WITH_NESESSARY_FIELDS_ONLY 14
-#define SIZE_WITH_ALWAYS_PRESENT_FIELDS 40
+#define SIZE_WITH_ALL_PRESENT_FIELDS 40
 
 #define NESESSARY_MAP_FIELD AD1_PRESENT | FC_PRESENT | DI_PRESENT | FCS_PRESENT
 
 #define BROADCAST_MAC {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+
+#define FRAME_LEAVE_BLNK_FIELDS
 
 #define CHECK_REST(mpp) \
     if (mpp->frame.seq_control != NO_DATA) {\

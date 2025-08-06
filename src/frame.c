@@ -1,10 +1,13 @@
 #include "include/frame.h"
 
 void mapper_init(mapper* mpp) {
-    mpp->size = SIZE_WITH_NESESSARY_FIELDS_ONLY;
+    mpp->map = FULL_MAP_NO_DATA;
+    mpp->size = SIZE_WITH_ALL_PRESENT_FIELDS;
+    #ifndef FRAME_LEAVE_BLNK_FIELDS
     mpp->map = NESESSARY_MAP_FIELD;
     TOTAL_ADDRESSES_SIZE(mpp);
     CHECK_REST(mpp);
+    #endif
     if (mpp->frame.data != NULL) {
         mpp->map |= DAT_PRESENT;
         mpp->size += strlen(mpp->frame.data);
